@@ -1,50 +1,36 @@
-function dashatize(n) {
- 
-  if (isNaN(n)) {
-    return NaN;
-  }
+import { Transform } from "stream";
 
-  if (!Number.isInteger(n)) {
-    return '';
-  }
-
-  const numStr = Math.abs(n).toString();
-
-  if (numStr === '0') {
-    return '0';
-  }
-
-  let result = '';
-
-  for (let i = 0; i < numStr.length; i++) {
-    const digit = parseInt(numStr[i]);
-    const isOdd = digit % 2 !== 0;
-
-    if (isOdd) {
+export function performTask(input, task) {
+  if (task === "dash") {
+    const n = parseFloat(input.trim());
+    if (!Number.isInteger(n)) return "";
+    const absN = Math.abs(n);
+    // Преобразуем число в строку и разбиваем на цифры
+    const digits = absN.toString().split("").map(Number);
+    if (digits.length === 0) return "";
     
-      result += `-${digit}-`;
-    } else {
-      result += digit;
+    let result = digits[0].toString();
+    // Проходим по парам соседних цифр
+    for (let i = 1; i < digits.length; i++) {
+      const prevDigit = digits[i - 1];
+      const currentDigit = digits[i];
+      // Добавляем дефис, если хотя бы одна из соседних цифр нечетная
+      if (prevDigit % 2 === 1 || currentDigit % 2 === 1) {
+        result += "-";
+      }
+      result += currentDigit;
     }
+    return result;
   }
-
-  result = result.replace(/--/g, '-');
-  
-  if (result.startsWith('-')) {
-    result = result.substring(1);
-  }
-  if (result.endsWith('-')) {
-    result = result.slice(0, -1);
-  }
-
-  return result;
+  return `Task "${task}" not implemented.`;
 }
 
-// Тесты
-console.log(dashatize(274));    
-console.log(dashatize(6815));  
-console.log(dashatize(NaN));   
-console.log(dashatize(0));      
-console.log(dashatize(-1));   
-console.log(dashatize(-28369)); 
-console.log(dashatize(3.14));   
+export function streamTransform(task) {
+  return new Transform({
+    transform(chunk, encoding, callback) {
+      const data = chunk.toString().trim();
+      const result = performTask(data, task);
+      callback(null, result.toString() + "\n");
+    },
+  });
+}
